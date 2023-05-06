@@ -64,57 +64,60 @@ void CGameFramework::OnDestroy()
 		{
 			m_ppd3dRenderTargetBuffers[i]->Release();
 		}
-
-		if (m_pd3dDepthStencilBuffer)
-		{
-			m_pd3dDepthStencilBuffer->Release();
-		}
-
-		if (m_pd3dDsvDescriptorHeap)
-		{
-			m_pd3dDsvDescriptorHeap->Release();
-		}
-
-		if (m_pd3dCommandAllocator)
-		{
-			m_pd3dCommandAllocator->Release();
-		}
-
-		if (m_pd3dCommandQueue)
-		{
-			m_pd3dCommandQueue->Release();
-		}
-
-		if (m_pd3dPipelineState)
-		{
-			m_pd3dPipelineState->Release();
-		}
-
-		if (m_pd3dCommandList)
-		{
-			m_pd3dCommandList->Release();
-		}
-
-		if (m_pd3dFence)
-		{
-			m_pd3dFence->Release();
-		}
-
-		m_pdxgiSwapChain->SetFullscreenState(false, nullptr);
-
-		if (m_pdxgiSwapChain)
-		{
-			m_pdxgiSwapChain->Release();
-		}
-		if (m_pd3dDevice)
-		{
-			m_pd3dDevice->Release();
-		}
-		if (m_pdxgiFactory)
-		{
-			m_pdxgiFactory->Release();
-		}
 	}
+
+	if (m_pd3dDepthStencilBuffer)
+	{
+		m_pd3dDepthStencilBuffer->Release();
+	}
+
+	if (m_pd3dDsvDescriptorHeap)
+	{
+		m_pd3dDsvDescriptorHeap->Release();
+	}
+
+	if (m_pd3dCommandAllocator)
+	{
+		m_pd3dCommandAllocator->Release();
+	}
+
+	if (m_pd3dCommandQueue)
+	{
+		m_pd3dCommandQueue->Release();
+	}
+
+	if (m_pd3dPipelineState)
+	{
+		m_pd3dPipelineState->Release();
+	}
+
+	if (m_pd3dCommandList)
+	{
+		m_pd3dCommandList->Release();
+	}
+
+	if (m_pd3dFence)
+	{
+		m_pd3dFence->Release();
+	}
+
+	m_pdxgiSwapChain->SetFullscreenState(false, nullptr);
+
+	if (m_pdxgiSwapChain)
+	{
+		m_pdxgiSwapChain->Release();
+	}
+
+	if (m_pd3dDevice)
+	{
+		m_pd3dDevice->Release();
+	}
+
+	if (m_pdxgiFactory)
+	{
+		m_pdxgiFactory->Release();
+	}
+
 
 #if defined(_DEBUG)	//디버깅 모드에서 디버그
 	IDXGIDebug1* pdxgiDebug = nullptr;
@@ -268,7 +271,8 @@ void CGameFramework::CreateRtvDescriptorHeap()
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
 	ZeroMemory(&d3dDescriptorHeapDesc, sizeof(D3D12_DESCRIPTOR_HEAP_DESC));
 	d3dDescriptorHeapDesc.NumDescriptors = m_nSwapChainBuffers;
-	d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV; d3dDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	d3dDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	d3dDescriptorHeapDesc.NodeMask = 0;
 	HRESULT hResult = m_pd3dDevice->CreateDescriptorHeap(&d3dDescriptorHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)&m_pd3dRtvDescriptorHeap);
 
@@ -279,6 +283,7 @@ void CGameFramework::CreateRtvDescriptorHeap()
 void CGameFramework::CreateDsvDescriptorHeap()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
+	ZeroMemory(&d3dDescriptorHeapDesc, sizeof(D3D12_DESCRIPTOR_HEAP_DESC));
 
 	//깊이-스텐실 서술자 힙(서술자의 개수는 1)을 생성한다.
 	d3dDescriptorHeapDesc.NumDescriptors = 1;
@@ -373,37 +378,37 @@ void CGameFramework::FrameAdvance()
 	d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 	d3dResourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	d3dResourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-	
+
 	m_pd3dCommandList->ResourceBarrier(1, &d3dResourceBarrier);
-	
+
 	//뷰포트와 씨저 사각형을 설정한다.
 	m_pd3dCommandList->RSSetViewports(1, &m_d3dViewport);
 	m_pd3dCommandList->RSSetScissorRects(1, &m_d3dScissorRect);
-	
+
 	//현재의 렌더 타겟에 해당하는 서술자의 CPU 주소(핸들)를 계산한다.
-	D3D12_CPU_DESCRIPTOR_HANDLE d3dRtvCPUDescriptorHandle =	m_pd3dRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	d3dRtvCPUDescriptorHandle.ptr += (m_nSwapChainBufferIndex *	m_nRtvDescriptorIncrementSize);
-	
+	D3D12_CPU_DESCRIPTOR_HANDLE d3dRtvCPUDescriptorHandle = m_pd3dRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	d3dRtvCPUDescriptorHandle.ptr += (m_nSwapChainBufferIndex * m_nRtvDescriptorIncrementSize);
+
 	//원하는 색상으로 렌더 타겟(뷰)을 지운다.
 	float pfClearColor[4] = { 0.0f, 0.125f, 0.3f, 1.0f };
-	m_pd3dCommandList->ClearRenderTargetView(d3dRtvCPUDescriptorHandle,	pfClearColor/*Colors::Azure*/, 0, nullptr);
-	
+	m_pd3dCommandList->ClearRenderTargetView(d3dRtvCPUDescriptorHandle, pfClearColor/*Colors::Azure*/, 0, nullptr);
+
 	//깊이-스텐실 서술자의 CPU 주소를 계산한다.
-	D3D12_CPU_DESCRIPTOR_HANDLE d3dDsvCPUDescriptorHandle =	m_pd3dDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	
+	D3D12_CPU_DESCRIPTOR_HANDLE d3dDsvCPUDescriptorHandle = m_pd3dDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
 	//원하는 값으로 깊이-스텐실(뷰)을 지운다.
-	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle,	D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-	
+	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+
 	//렌더 타겟 뷰(서술자)와 깊이-스텐실 뷰(서술자)를 출력-병합 단계(OM)에 연결한다. 
 	//렌더링 코드는 여기에 추가될 것이다.
 	m_pd3dCommandList->OMSetRenderTargets(1, &d3dRtvCPUDescriptorHandle, TRUE, &d3dDsvCPUDescriptorHandle);
-	
+
 	/*현재 렌더 타겟에 대한 렌더링이 끝나기를 기다린다. GPU가 렌더 타겟(버퍼)을 더 이상 사용하지 않으면 렌더 타겟
 	의 상태는 프리젠트 상태(D3D12_RESOURCE_STATE_PRESENT)로 바뀔 것이다.*/
 	d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	d3dResourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	d3dResourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-	
+
 	m_pd3dCommandList->ResourceBarrier(1, &d3dResourceBarrier);
 
 	//명령 리스트를 닫힌 상태로 만든다.
@@ -412,10 +417,10 @@ void CGameFramework::FrameAdvance()
 	//명령 리스트를 명령 큐에 추가하여 실행한다.
 	ID3D12CommandList* ppd3dCommandLists[] = { m_pd3dCommandList };
 	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandLists);
-	
+
 	//GPU가 모든 명령 리스트를 실행할 때 까지 기다린다.
 	WaitForGpuComplete();
-	
+
 	/*스왑체인을 프리젠트한다. 프리젠트를 하면 현재 렌더 타겟(후면버퍼)의 내용이 전면버퍼로 옮겨지고 렌더 타겟 인덱스가 바뀔 것이다.*/
 	DXGI_PRESENT_PARAMETERS dxgiPresentParameters;
 	dxgiPresentParameters.DirtyRectsCount = 0;
@@ -435,7 +440,7 @@ void CGameFramework::WaitForGpuComplete()
 	//GPU가 펜스의 값을 설정하는 명령을 명령 큐에 추가한다.
 	const UINT64 nFence = m_nFenceValue;
 	HRESULT hResult = m_pd3dCommandQueue->Signal(m_pd3dFence, nFence);
-	
+
 	if (m_pd3dFence->GetCompletedValue() < nFence)
 	{
 		//펜스의 현재 값이 설정한 값보다 작으면 펜스의 현재 값이 설정한 값이 될 때까지 기다린다. 
@@ -469,7 +474,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 		switch (wParam)
 		{
 		case VK_ESCAPE:
-			::PostQuitMessage(0);
+			PostQuitMessage(0);
 			break;
 		case VK_RETURN:
 			break;
