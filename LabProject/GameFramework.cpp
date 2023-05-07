@@ -24,6 +24,8 @@ CGameFramework::CGameFramework()
 	}
 	m_pd3dRtvDescriptorHeap = nullptr;
 	m_nRtvDescriptorIncrementSize = 0;
+
+	_tcscpy_s(m_pszFrameRate, _T("LapProject ("));
 }
 
 CGameFramework::~CGameFramework()
@@ -359,6 +361,8 @@ void CGameFramework::UpdateObjects()
 
 void CGameFramework::FrameAdvance()
 {
+	m_GameTimer.Tick(60.0f);
+
 	ProcessInput();
 
 	UpdateObjects();
@@ -390,7 +394,7 @@ void CGameFramework::FrameAdvance()
 	d3dRtvCPUDescriptorHandle.ptr += (m_nSwapChainBufferIndex * m_nRtvDescriptorIncrementSize);
 
 	//원하는 색상으로 렌더 타겟(뷰)을 지운다.
-	float pfClearColor[4] = { 0.0f, 0.125f, 0.3f, 1.0f };
+	float pfClearColor[4] = { 0.3f, 0.3f, 0.3f, 1.0f };
 	m_pd3dCommandList->ClearRenderTargetView(d3dRtvCPUDescriptorHandle, pfClearColor/*Colors::Azure*/, 0, nullptr);
 
 	//깊이-스텐실 서술자의 CPU 주소를 계산한다.
@@ -430,6 +434,14 @@ void CGameFramework::FrameAdvance()
 	m_pdxgiSwapChain->Present1(1, 0, &dxgiPresentParameters);
 
 	m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
+
+
+	/*현재의 프레임 레이트를 문자열로 가져와서 주 윈도우의 타이틀로  출력한다. m_pszBuffer 문자열이
+	"LapProject  ("으로  초기화되었으므로  (m_pszFrameRate+12)에서부터  프레임  레이트를  문자열로  출력하여 “ FPS)” 문자열과 합친다.
+	::_itow_s(m_nCurrentFrameRate, (m_pszFrameRate + 12), 37, 10);
+	::wcscat_s((m_pszFrameRate + 12), 37, _T(" FPS)"));*/
+	m_GameTimer.GetFrameRate(m_pszFrameRate + 12, 37);
+	SetWindowText(m_hWnd, m_pszFrameRate);
 }
 
 void CGameFramework::WaitForGpuComplete()

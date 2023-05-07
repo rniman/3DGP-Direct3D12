@@ -17,6 +17,10 @@
 #include <wrl.h>
 #include <shellapi.h>
 
+//C++
+#include <chrono>
+#include <array>
+
 //Direct3D 12 API 함수를 위한 헤더
 #include <d3d12.h>
 #include <dxgi1_4.h>
