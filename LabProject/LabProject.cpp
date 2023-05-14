@@ -128,6 +128,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
 
+#ifdef _WITH_SWAPCHAIN_FULLSCREEN_STATE 
+	gameFramework.ChangeSwapChainState();
+#endif
+
 	return true;
 }
 
