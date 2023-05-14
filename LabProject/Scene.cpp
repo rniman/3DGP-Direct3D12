@@ -154,6 +154,7 @@ void CScene::PrepareRender(ID3D12GraphicsCommandList* pd3dCommandList)
 
 	//프리미티브 토폴로지(삼각형 리스트)를 설정한다.
 	pd3dCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 }
 
 void CScene::RenderObjects(ID3D12GraphicsCommandList* pd3dCommandList)
