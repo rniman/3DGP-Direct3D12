@@ -1,5 +1,6 @@
 #pragma once
 #include "Timer.h"
+#include "Scene.h"
 
 class CGameFramework
 {
@@ -30,6 +31,8 @@ public:
 	void UpdateObjects();
 	void FrameAdvance();
 	
+	void MoveToNextFrame();
+
 	//CPU와 GPU를 동기화하는 함수
 	void WaitForGpuComplete();
 
@@ -87,7 +90,7 @@ private:
 	
 	//펜스 인터페이스 포인터, 펜스의 값, 이벤트 핸들
 	ID3D12Fence* m_pd3dFence;
-	UINT64 m_nFenceValue;
+	UINT64 m_nFenceValues[m_nSwapChainBuffers];	//후면 버퍼마다 펜스값을 관리하기위해 배열로 선언
 	HANDLE m_hFenceEvent;
 
 	//뷰포트와 씨저 사각형
@@ -98,5 +101,8 @@ private:
 	CGameTimer m_GameTimer;
 	//다음은 프레임 레이트를 주 윈도우의 캡션에 출력하기 위한 문자열이다.
 	_TCHAR m_pszFrameRate[50];
+
+//private:
+	CScene* m_pScene;
 };
 

@@ -13,14 +13,17 @@ CGameFramework::CGameFramework()
 	, m_nDsvDescriptorIncrementSize{ 0 }
 	, m_hFenceEvent{ nullptr }
 	, m_pd3dFence{ nullptr }
-	, m_nFenceValue{ 0 }
 	, m_nWndClientHeight{ FRAME_BUFFER_HEIGHT }
 	, m_nWndClientWidth{ FRAME_BUFFER_WIDTH }
+	, m_d3dViewport{ 0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f }
+	, m_d3dScissorRect{ 0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT }
+	, m_pScene{ nullptr }
 {
 
 	for (int i = 0; i < m_nSwapChainBuffers; ++i)
 	{
 		m_ppd3dRenderTargetBuffers[i] = nullptr;
+		m_nFenceValues[i] = 0;
 	}
 	m_pd3dRtvDescriptorHeap = nullptr;
 	m_nRtvDescriptorIncrementSize = 0;
@@ -187,7 +190,7 @@ void CGameFramework::CreateDirect3DDevice()
 	/*펜스와 동기화를 위한 이벤트 객체를 생성한다(이벤트 객체의 초기값을 FALSE이다). 이벤트가 실행되면(Signal) 이
 	벤트의 값을 자동적으로 FALSE가 되도록 생성한다.*/
 	hResult = m_pd3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, __uuidof(ID3D12Fence), (void**)&m_pd3dFence);
-	m_nFenceValue = 0;	//펜스를 생성하고 펜스 값을 0으로 설정한다.
+	//m_nFenceValues = 0;	//펜스를 생성하고 펜스 값을 0으로 설정한다.
 	m_hFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 
 	//뷰포트를 주 윈도우의 클라이언트 영역 전체로 설정한다.
@@ -216,7 +219,7 @@ void CGameFramework::CreateSwapChain()
 	m_nWndClientWidth = rcClient.right - rcClient.left;
 	m_nWndClientHeight = rcClient.bottom - rcClient.top;
 
-
+	
 	DXGI_SWAP_CHAIN_DESC dxgiSwapChainDesc;
 	ZeroMemory(&dxgiSwapChainDesc, sizeof(dxgiSwapChainDesc));
 
@@ -346,10 +349,24 @@ void CGameFramework::CreateDepthStencilView()
 
 void CGameFramework::BuildObjects()
 {
+	m_pScene = new CScene();
+	
+	if (m_pScene)
+	{
+		m_pScene->BuildObjects(*m_pd3dDevice);
+	}
+
+	m_GameTimer.Reset();
 }
 
 void CGameFramework::ReleaseObjects()
 {
+	if (m_pScene)
+	{
+		m_pScene->ReleaseObjects();
+
+		delete m_pScene;
+	}
 }
 
 void CGameFramework::ProcessInput()
@@ -358,6 +375,10 @@ void CGameFramework::ProcessInput()
 
 void CGameFramework::UpdateObjects()
 {
+	if (m_pScene)
+	{
+		m_pScene->UpdateObjects(m_GameTimer.GetDeltaTime());
+	}
 }
 
 void CGameFramework::FrameAdvance()
@@ -408,6 +429,11 @@ void CGameFramework::FrameAdvance()
 	//렌더링 코드는 여기에 추가될 것이다.
 	m_pd3dCommandList->OMSetRenderTargets(1, &d3dRtvCPUDescriptorHandle, TRUE, &d3dDsvCPUDescriptorHandle);
 
+	if (m_pScene)
+	{
+		m_pScene->RenderObjects(m_pd3dCommandList);
+	}
+
 	/*현재 렌더 타겟에 대한 렌더링이 끝나기를 기다린다. GPU가 렌더 타겟(버퍼)을 더 이상 사용하지 않으면 렌더 타겟
 	의 상태는 프리젠트 상태(D3D12_RESOURCE_STATE_PRESENT)로 바뀔 것이다.*/
 	d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -421,7 +447,7 @@ void CGameFramework::FrameAdvance()
 
 	//명령 리스트를 명령 큐에 추가하여 실행한다.
 	ID3D12CommandList* ppd3dCommandLists[] = { m_pd3dCommandList };
-	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandLists);
+	m_pd3dCommandQueue->ExecuteCommandLists(_countof(ppd3dCommandLists), ppd3dCommandLists);
 
 	//GPU가 모든 명령 리스트를 실행할 때 까지 기다린다.
 	WaitForGpuComplete();
@@ -434,24 +460,30 @@ void CGameFramework::FrameAdvance()
 	dxgiPresentParameters.pScrollOffset = nullptr;
 	m_pdxgiSwapChain->Present1(1, 0, &dxgiPresentParameters);
 
-	m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
+	MoveToNextFrame();
 
-
-	/*현재의 프레임 레이트를 문자열로 가져와서 주 윈도우의 타이틀로  출력한다. m_pszBuffer 문자열이
-	"LapProject  ("으로  초기화되었으므로  (m_pszFrameRate+12)에서부터  프레임  레이트를  문자열로  출력하여 “ FPS)” 문자열과 합친다.
-	::_itow_s(m_nCurrentFrameRate, (m_pszFrameRate + 12), 37, 10);
-	::wcscat_s((m_pszFrameRate + 12), 37, _T(" FPS)"));*/
 	m_GameTimer.GetFrameRate(m_pszFrameRate + 12, 37);
 	SetWindowText(m_hWnd, m_pszFrameRate);
 }
 
+void CGameFramework::MoveToNextFrame()
+{
+	m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
+
+	UINT64 nFence = ++m_nFenceValues[m_nSwapChainBufferIndex];
+	HRESULT hResult = m_pd3dCommandQueue->Signal(m_pd3dFence, nFence);
+	if (m_pd3dFence->GetCompletedValue() < nFence)
+	{
+		hResult = m_pd3dFence->SetEventOnCompletion(nFence, m_hFenceEvent);
+		WaitForSingleObject(m_hFenceEvent, INFINITE);
+	}
+}
+
 void CGameFramework::WaitForGpuComplete()
 {
-	//CPU 펜스의 값을 증가한다.
-	m_nFenceValue++;
 
 	//GPU가 펜스의 값을 설정하는 명령을 명령 큐에 추가한다.
-	const UINT64 nFence = m_nFenceValue;
+	const UINT64 nFence = ++m_nFenceValues[m_nSwapChainBufferIndex];
 	HRESULT hResult = m_pd3dCommandQueue->Signal(m_pd3dFence, nFence);
 
 	if (m_pd3dFence->GetCompletedValue() < nFence)
