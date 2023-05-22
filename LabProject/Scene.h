@@ -1,7 +1,7 @@
 #pragma once
 #include "Timer.h"
 
-class CGameObject;
+class CObjectsShader;
 class CCamera;
 
 class CScene
@@ -26,10 +26,11 @@ public:
 	bool OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM	lParam);
 	bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 
-private:
-	//씬은 게임 객체들의 집합이다. 게임 객체는 셰이더를 포함한다.
-	CGameObject** m_ppObjects{ nullptr };
-	int m_nObjects{};
+protected:
+	//배치(Batch) 처리를 하기 위하여 씬을 셰이더들의 리스트로 표현한다.
+	CObjectsShader* m_pShaders{ nullptr };
+	int m_nShaders{};
+
 	ID3D12RootSignature* m_pd3dGraphicsRootSignature{ nullptr };
 };
 

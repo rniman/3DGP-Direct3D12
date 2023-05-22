@@ -1,6 +1,7 @@
 #pragma once
 
 class CCamera;
+class CGameObject;
 
 class CShader
 {
@@ -27,7 +28,6 @@ public:
 	virtual void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT4X4* pxmf4x4World);
 	virtual void ReleaseShaderVariables();
 
-
 	virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 
@@ -41,15 +41,41 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-class CDiffusedShader : public CShader
+class CPlayerShader : public CShader
 {
 public:
-	CDiffusedShader();
-	virtual ~CDiffusedShader();
+	CPlayerShader();
+	virtual ~CPlayerShader();
 
 	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
 	virtual D3D12_SHADER_BYTECODE CreateVertexShader(ID3DBlob** ppd3dShaderBlob);
 	virtual D3D12_SHADER_BYTECODE CreatePixelShader(ID3DBlob** ppd3dShaderBlob);
 
 	virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature);
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+//“CObjectsShader” 클래스는 게임 객체들을 포함하는 셰이더 객체이다.
+class CObjectsShader : public CShader
+{
+public:
+	CObjectsShader();
+	virtual ~CObjectsShader();
+	
+	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void UpdateObjects(float fTimeElapsed);
+	virtual void ReleaseObjects();
+	
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader(ID3DBlob** ppd3dShaderBlob);
+	virtual D3D12_SHADER_BYTECODE CreatePixelShader(ID3DBlob** ppd3dShaderBlob);
+	
+	virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature);
+	virtual void ReleaseUploadBuffers();
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
+
+protected:
+	CGameObject** m_ppObjects{ nullptr };
+	int m_nObjects{};
 };
