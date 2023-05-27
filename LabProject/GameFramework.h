@@ -3,6 +3,7 @@
 
 class CScene;
 class CCamera;
+class CPlayer;
 
 class CGameFramework
 {
@@ -103,6 +104,9 @@ private:
 
 	CScene* m_pScene{ nullptr };
 	CCamera* m_pCamera{ nullptr };
+	CPlayer* m_pPlayer{ nullptr };
 
+	//마지막으로 마우스 버튼을 클릭할 때의 마우스 커서의 위치이다.
+	POINT m_ptOldCursorPos;
 };
 

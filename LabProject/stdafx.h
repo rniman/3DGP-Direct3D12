@@ -16,7 +16,7 @@
 #include <tchar.h>
 
 #include <string>
-#include <wrl.h>
+//#include <wrl.h>
 #include <shellapi.h>
 
 //C++
@@ -40,7 +40,7 @@
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 
-using Microsoft::WRL::ComPtr;
+//using Microsoft::WRL::ComPtr;
 
 #pragma comment(lib, "d3dcompiler.lib") 
 #pragma comment(lib, "d3d12.lib")
