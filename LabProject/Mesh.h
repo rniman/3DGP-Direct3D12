@@ -40,7 +40,7 @@ public:
 	void Release();
 	void ReleaseUploadBuffers();
 
-	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, UINT nInstances = 1);
 
 protected:
 		ID3D12Resource* m_pd3dVertexBuffer{ nullptr };
