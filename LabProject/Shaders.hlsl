@@ -18,8 +18,23 @@ struct VS_INPUT
     float4 color : COLOR;
 }; 
 
+//정점 데이터와 인스턴싱 데이터를 위한 구조체이다.
+struct VS_INSTANCING_INPUT
+{
+    float3 position : POSITION;
+    float4 color : COLOR;
+    float4x4 mtxTransform : WORLDMATRIX;
+    float4 instanceColor : INSTANCECOLOR;
+};
+
 //정점 셰이더의 출력(픽셀 셰이더의 입력)을 위한 구조체를 선언한다.
 struct VS_OUTPUT
+{
+    float4 position : SV_POSITION;
+    float4 color : COLOR;
+};
+
+struct VS_INSTANCING_OUTPUT
 {
     float4 position : SV_POSITION;
     float4 color : COLOR;
@@ -35,8 +50,21 @@ VS_OUTPUT VSDiffused(VS_INPUT input)
     return (output);
 }
 
+VS_INSTANCING_OUTPUT VSInstancing(VS_INSTANCING_INPUT input)
+{
+    VS_INSTANCING_OUTPUT output;
+    output.position = mul(mul(mul(float4(input.position, 1.0f), input.mtxTransform), gmtxView), gmtxProjection);
+    output.color = input.color + input.instanceColor;
+    return (output);
+}
+
 //픽셀 셰이더를 정의한다.
 float4 PSDiffused(VS_OUTPUT input) : SV_TARGET
+{
+    return (input.color);
+}
+
+float4 PSInstancing(VS_INSTANCING_OUTPUT input) : SV_TARGET
 {
     return (input.color);
 }
