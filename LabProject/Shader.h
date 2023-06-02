@@ -3,6 +3,21 @@
 class CCamera;
 class CGameObject;
 
+//객체를 렌더링할 때 적용하는 상수 버퍼 데이터
+struct CB_GAMEOBJECT_INFO
+{
+	XMFLOAT4X4 m_xmf4x4World;
+	
+	//객체에 적용될 재질 번호
+	UINT m_nMaterial;
+};
+
+//플레이어 객체를 렌더링할 때 적용하는 상수 버퍼 데이터
+struct CB_PLAYER_INFO
+{
+	XMFLOAT4X4 m_xmf4x4World;
+};
+
 class CShader
 {
 public:
@@ -25,7 +40,8 @@ public:
 	
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
-	virtual void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT4X4* pxmf4x4World);
+	virtual void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT4X4* pxmf4x4World) { }
+	virtual void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, MATERIAL* pMaterial) { }
 	virtual void ReleaseShaderVariables();
 
 	virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList);
@@ -52,6 +68,18 @@ public:
 	virtual D3D12_SHADER_BYTECODE CreatePixelShader(ID3DBlob** ppd3dShaderBlob);
 
 	virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature);
+
+	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void ReleaseShaderVariables();
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList) {}
+	virtual void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT4X4* pxmf4x4World);
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
+
+protected:
+	//플레이어 객체에 대한 리소스와 리소스 포인터
+	ID3D12Resource* m_pd3dcbPlayer{ nullptr };
+	CB_PLAYER_INFO* m_pcbMappedPlayer{ nullptr };
+		
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +103,15 @@ public:
 	virtual void ReleaseUploadBuffers();
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 
+	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void ReleaseShaderVariables();
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+
 protected:
 	CGameObject** m_ppObjects{ nullptr };
 	int m_nObjects{};
+
+	//쉐이더 객체에 포함되어 있는 모든 게임 객체들에 대한 리소스와 리소스 포인터
+	ID3D12Resource* m_pd3dcbGameObjects{ nullptr };
+	UINT8* m_pcbMappedGameObjects{ nullptr };
 };

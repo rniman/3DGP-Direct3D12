@@ -3,6 +3,36 @@
 #include "Shader.h"
 #include "Camera.h"
 
+
+CMaterial::CMaterial()
+{
+	m_xmf4Albedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+}
+CMaterial::~CMaterial()
+{
+	if (m_pShader)
+	{
+		m_pShader->ReleaseShaderVariables();
+		m_pShader->Release();
+	}
+}
+
+void CMaterial::SetShader(CShader* pShader)
+{
+	if (m_pShader)
+	{
+		m_pShader->Release();
+	}
+
+	m_pShader = pShader;
+	if (m_pShader)
+	{
+		m_pShader->AddRef();
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
 CGameObject::CGameObject()
 {
 	XMStoreFloat4x4(&m_xmf4x4World, XMMatrixIdentity());
@@ -15,10 +45,9 @@ CGameObject::~CGameObject()
 		m_pMesh->Release();
 	}
 
-	if (m_pShader)
+	if (m_pMaterial)
 	{
-		m_pShader->ReleaseShaderVariables();
-		m_pShader->Release();
+		m_pMaterial->Release();
 	}
 }
 
@@ -35,7 +64,7 @@ void CGameObject::SetMesh(CMesh* pMesh)
 	}
 
 	m_pMesh = pMesh;
-	
+
 	if (m_pMesh)
 	{
 		m_pMesh->AddRef();
@@ -44,17 +73,39 @@ void CGameObject::SetMesh(CMesh* pMesh)
 
 void CGameObject::SetShader(CShader* pShader)
 {
-	if (m_pShader)
+	if (!m_pMaterial)
 	{
-		m_pShader->Release();
+		m_pMaterial = new CMaterial();
+		m_pMaterial->AddRef();
+	}
+	if (m_pMaterial)
+	{
+		m_pMaterial->SetShader(pShader);
+	}
+}
+
+void CGameObject::SetMaterial(CMaterial* pMaterial)
+{
+	if (m_pMaterial)
+	{
+		m_pMaterial->Release();
 	}
 
-	m_pShader = pShader;
-
-	if (m_pShader)
+	m_pMaterial = pMaterial;
+	if (m_pMaterial)
 	{
-		m_pShader->AddRef();
+		m_pMaterial->AddRef();
 	}
+}
+
+void CGameObject::SetMaterial(UINT nReflection)
+{
+	if (!m_pMaterial)
+	{
+		m_pMaterial = new CMaterial();
+	}
+
+	m_pMaterial->SetReflection(nReflection);
 }
 
 void CGameObject::Update(float fTimeElapsed)
@@ -73,12 +124,15 @@ void CGameObject::OnPrepareRender()
 void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	OnPrepareRender();
-	//객체의 정보를 셰이더 변수(상수 버퍼)로 복사한다.
-	UpdateShaderVariables(pd3dCommandList);
-	if (m_pShader)
+	if (m_pMaterial)
 	{
-		m_pShader->Render(pd3dCommandList, pCamera);
+		if (m_pMaterial->GetShader())
+		{
+			m_pMaterial->GetShader()->Render(pd3dCommandList, pCamera);
+			m_pMaterial->GetShader()->UpdateShaderVariable(pd3dCommandList, &m_xmf4x4World);
+		}
 	}
+	
 	if (m_pMesh)
 	{
 		m_pMesh->Render(pd3dCommandList);
@@ -179,7 +233,7 @@ void CGameObject::Rotate(float fPitch, float fYaw, float fRoll)
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 CRotatingObject::CRotatingObject()
-	: m_xmf3RotationAxis{XMFLOAT3{0.0f, 1.0f, 0.0f}}
+	: m_xmf3RotationAxis{ XMFLOAT3{0.0f, 1.0f, 0.0f} }
 	, m_fRotationSpeed{ 90.0f }
 {
 }
