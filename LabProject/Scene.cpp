@@ -83,7 +83,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
 
 	//지형을 확대할 스케일 벡터이다. x-축과 z-축은 8배, y-축은 2배 확대한다.
-	XMFLOAT3 xmf3Scale(8.0f, 1.0f, 8.0f);
+	XMFLOAT3 xmf3Scale(2.0f, 2.0f, 2.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.2f, 0.0f, 0.0f);
 	
 	//지형을 높이 맵 이미지 파일(HeightMap.raw)을 사용하여 생성한다. 높이 맵의 크기는 가로x세로(257x257)이다.
@@ -93,7 +93,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList,	m_pd3dGraphicsRootSignature, _T("/Assets/Image/Terrain/HeightMap.raw"), 257, 257, 17, 17, xmf3Scale, xmf4Color);
 #else
 	//지형을 하나의 격자 메쉬(257x257)로 생성한다.
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList,	m_pd3dGraphicsRootSignature, _T("HeightMap.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
+	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList,	m_pd3dGraphicsRootSignature, _T("HeightMap.raw"), 1025, 1025, 1025, 1025, xmf3Scale, xmf4Color);
 #endif
 	m_nShaders = 1;
 	m_pShaders = new CObjectsShader[m_nShaders];
