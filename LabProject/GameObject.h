@@ -48,6 +48,9 @@ public:
 	//게임 객체를 회전(x-축, y-축, z-축)한다.
 	void Rotate(float fPitch = 10.0f, float fYaw = 10.0f, float fRoll = 10.0f);
 
+	//게임 객체가 카메라에 보인는 가를 검사한다.
+	bool IsVisible(CCamera* pCamera = nullptr);
+
 protected:
 	XMFLOAT4X4 m_xmf4x4World;
 	CMesh* m_pMesh{ nullptr };

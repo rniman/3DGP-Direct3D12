@@ -78,8 +78,12 @@ public:
 	//3인칭 카메라에서 카메라가 바라보는 지점을 설정한다. 일반적으로 플레이어를 바라보도록 설정한다.
 	virtual void SetLookAt(XMFLOAT3& xmf3LookAt) { }
 
+	//절두체(월드 좌표계)를 생성한다.
+	void GenerateFrustum();
+	//바운딩 박스(OOBB, 월드 좌표계)가 절두체에 포함되는 가를 검사한다.
+	bool IsInFrustum(BoundingOrientedBox& xmBoundingBox);
 
-protected://카메라 변환 행렬
+protected:
 	//카메라의 위치 벡터이다.
 	XMFLOAT3 m_xmf3Position;
 
@@ -105,6 +109,7 @@ protected://카메라 변환 행렬
 	//플레이어가 회전할 때 얼마만큼의 시간을 지연 시킨 후 카메라를 회전 시킬 것인가
 	float m_fTimeLag;
 
+	//카메라 변환 행렬
 	XMFLOAT4X4 m_xmf4x4View;
 	XMFLOAT4X4 m_xmf4x4Projection;
 
@@ -112,6 +117,9 @@ protected://카메라 변환 행렬
 	D3D12_RECT m_d3dScissorRect;
 
 	CPlayer* m_pPlayer{ nullptr };
+
+	//절두체(월드 좌표계)
+	BoundingFrustum m_xmFrustum;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

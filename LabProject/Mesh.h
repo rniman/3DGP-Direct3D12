@@ -35,11 +35,13 @@ class CMesh
 public:
 	CMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual ~CMesh();
+	
+	BoundingOrientedBox GetBoundingBox() { return(m_xmBoundingBox); }
 
 	void AddRef();
 	void Release();
 	void ReleaseUploadBuffers();
-
+	
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList);
 
 protected:
@@ -65,7 +67,8 @@ protected:
 	//인덱스 버퍼의 인덱스에 더해질 인덱스이다.
 	int m_nBaseVertex{};
 	
-
+	//모델 좌표계의 OOBB 바운딩 박스이다.
+	BoundingOrientedBox	m_xmBoundingBox;
 private:
 	int m_nReferences {};
 };
