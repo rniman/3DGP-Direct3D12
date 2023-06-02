@@ -3,6 +3,7 @@
 
 class CObjectsShader;
 class CCamera;
+class CGameObject;
 
 class CScene
 {
@@ -25,6 +26,9 @@ public:
 
 	bool OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM	lParam);
 	bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
+
+	//씬의 모든 게임 객체들에 대한 마우스 픽킹을 수행한다.
+	CGameObject* PickObjectPointedByCursor(int xClient, int yClient, CCamera* pCamera);
 
 protected:
 	//배치(Batch) 처리를 하기 위하여 씬을 셰이더들의 리스트로 표현한다.

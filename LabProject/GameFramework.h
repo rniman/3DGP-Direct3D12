@@ -4,6 +4,7 @@
 class CScene;
 class CCamera;
 class CPlayer;
+class CGameObject;
 
 class CGameFramework
 {
@@ -46,6 +47,7 @@ public:
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 	LRESULT CALLBACK OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 	
+	void ProcessSelectedObject(DWORD dwDirection, float cxDelta, float cyDelta);
 
 private:
 	HINSTANCE m_hInstance;
@@ -108,5 +110,7 @@ private:
 
 	//마지막으로 마우스 버튼을 클릭할 때의 마우스 커서의 위치이다.
 	POINT m_ptOldCursorPos;
+
+	CGameObject* m_pSelectedObject{ nullptr };
 };
 
